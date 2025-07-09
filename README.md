@@ -1,4 +1,5 @@
-ShareYaar
+**ShareYaar**
+
 Secure, Encrypted File Sharing with Client-Side AES Encryption
 Note: You should replace the link above with a real screenshot of your running application.
 
