@@ -84,8 +84,8 @@ Python (3.6 or higher)
 Installation
 Clone the repository:
 
-git clone [https://github.com/your-username/Share-yaar.git](https://github.com/your-username/Share-yaar.git)
-
+git clone [(https://github.com/hussain9347/Share-yaar.git)
+](https://github.com/hussain9347/Shareyaar)
 Navigate to the project directory:
 
 cd Share-yaar
