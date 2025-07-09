@@ -1,4 +1,6 @@
 📁 ShareYaar — Secure File Sharing App
+
+
 ShareYaar is a secure file sharing web app. It lets you upload files, encrypt them in your browser using a password, and share a safe link with others to download and decrypt the file — without the server ever seeing your actual data.
 
 📌 What It Does (Overview)
