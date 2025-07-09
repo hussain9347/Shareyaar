@@ -1,5 +1,6 @@
 📁 ShareYaar — Secure File Sharing App
 
+![image](https://github.com/user-attachments/assets/28f59d14-2747-496f-9a3a-61c8c853a1ff)
 
 ShareYaar is a secure file sharing web app. It lets you upload files, encrypt them in your browser using a password, and share a safe link with others to download and decrypt the file — without the server ever seeing your actual data.
 
@@ -32,12 +33,14 @@ You can delete your uploaded file when you're done.
 ⚙️ How It Works (Step-by-Step)
 Select File + Enter Password
 The user picks a file and enters a password on the homepage.
+![image](https://github.com/user-attachments/assets/28f59d14-2747-496f-9a3a-61c8c853a1ff)
 
 Encrypt in Browser
 JavaScript encrypts the file in the browser using AES encryption.
 
 Upload Encrypted File
 Only the encrypted file is sent to the Flask server.
+![image](https://github.com/user-attachments/assets/a8f7647f-2908-4cc2-ad0c-9d44203fea7b)
 
 Store on Server
 The encrypted file is saved in the uploads/ folder.
@@ -47,6 +50,7 @@ A special link is generated for the recipient to download the file.
 
 Download + Decrypt
 The recipient opens the link, enters the password, and the browser decrypts the file and downloads it.
+![image](https://github.com/user-attachments/assets/ed537b3e-fcf7-42bd-ae75-ac7f6ef84100)
 
 🛠️ Tech Stack
 Backend
