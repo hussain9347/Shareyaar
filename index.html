@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareYaar - Simple & Reliable File Transfers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CryptoJS for AES Encryption -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('https://images.unsplash.com/photo-1556902452-1942873b1853?q=80&w=2832&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .tooltip { visibility: hidden; opacity: 0; transition: opacity 0.2s; }
+        .has-tooltip:hover .tooltip { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="antialiased text-gray-800 bg-gray-50">
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-4xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8">
+            <header class="flex justify-between items-center pb-6 border-b border-gray-200">
+                <div class="flex items-center space-x-2">
+                    <i class="ph-fill ph-paper-plane-tilt text-3xl text-teal-500"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">ShareYaar</h1>
+                </div>
+                <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-600">
+                    <a href="#" class="hover:text-teal-600">Send</a>
+                    <a href="#" class="hover:text-teal-600">Sent Files</a>
+                    <a href="#" class="hover:text-teal-600">About</a>
+                </nav>
+            </header>
+
+            <main class="py-10 text-center">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight">
+                    Simple and <span class="text-teal-600">secure</span>
+                    <br/>
+                    file transfers
+                </h2>
+                
+                <form id="uploadForm" action="/" method="post" enctype="multipart/form-data" class="mt-8">
+                    <input type="file" name="file" id="file" class="hidden" required>
+                    
+                    <div id="filePreview" class="mt-6 hidden max-w-lg mx-auto text-left">
+                        <div class="p-3 bg-gray-100 rounded-lg border">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3 truncate">
+                                    <i id="fileIcon" class="ph-bold ph-file text-2xl text-gray-500"></i>
+                                    <div class="truncate">
+                                        <p id="fileName" class="font-medium text-gray-900 truncate"></p>
+                                        <p id="fileSize" class="text-sm text-gray-500"></p>
+                                    </div>
+                                </div>
+                                <button id="removeFileBtn" type="button" class="text-gray-500 hover:text-red-600">
+                                    <i class="ph-bold ph-x text-xl"></i>
+                                </button>
+                            </div>
+                            <div class="mt-4">
+                                <label for="password" class="block text-sm font-medium text-gray-700">Set a Password (Required)</label>
+                                <input type="password" id="password" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="actionButtons" class="mt-8 flex justify-center">
+                         <button id="sendFilesBtn" type="button" class="inline-flex items-center justify-center py-4 px-8 border border-transparent shadow-lg text-base font-bold rounded-full text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-transform hover:scale-105">
+                            <i class="ph-bold ph-rocket-launch text-xl mr-3"></i>
+                            Select File
+                        </button>
+                        <button id="uploadButton" type="submit" class="hidden items-center justify-center py-4 px-8 border border-transparent shadow-lg text-base font-bold rounded-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400">
+                            <span id="buttonText">Encrypt & Upload</span>
+                            <div id="spinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </div>
+                </form>
+            </main>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="mt-6 space-y-3">
+                  {% for category, message in messages %}
+                    <div class="p-4 rounded-lg flex items-start space-x-3 
+                      {% if category == 'success' %} bg-green-100 text-green-900
+                      {% elif category == 'error' %} bg-red-100 text-red-900
+                      {% else %} bg-blue-100 text-blue-900 {% endif %}">
+                      <i class="ph-fill {% if category == 'success' %} ph-check-circle {% elif category == 'error' %} ph-x-circle {% else %} ph-info {% endif %} text-xl"></i>
+                      <span>{{ message }}</span>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+            
+            {% if files %}
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 text-center">Uploaded Files</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <tbody class="bg-white">
+                            {% for file in files %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <i class="ph-bold ph-file-archive text-2xl text-teal-500 mr-4"></i>
+                                        <span class="font-medium text-gray-900">{{ file }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex items-center justify-end space-x-4">
+                                        <button data-link="{{ url_for('share_file', filename=file, _external=True) }}" class="copy-link-btn has-tooltip relative flex items-center text-gray-500 hover:text-indigo-600">
+                                            <i class="ph-bold ph-link-simple text-xl"></i>
+                                            <span class="tooltip absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Copy link</span>
+                                        </button>
+                                        <button data-filename="{{ file }}" class="delete-btn has-tooltip relative text-gray-500 hover:text-red-600">
+                                            <i class="ph-bold ph-trash-simple text-xl"></i>
+                                            <span class="tooltip absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2">Delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <footer class="text-center py-6 text-sm">
+            <div class="text-white/80">
+                <a href="#" class="hover:text-white">Contact</a><span class="mx-2">&middot;</span>
+                <a href="#" class="hover:text-white">Terms of Use</a><span class="mx-2">&middot;</span>
+                <a href="#" class="hover:text-white">Log In</a>
+            </div>
+             <p class="text-white/60 mt-2">&copy; 2024 ShareYaar. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <div id="deleteModal" class="fixed inset-0 bg-gray-800 bg-opacity-60 overflow-y-auto h-full w-full flex items-center justify-center hidden z-50">
+        <div class="relative mx-auto p-6 border w-full max-w-md shadow-xl rounded-2xl bg-white">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100">
+                    <i class="ph-bold ph-warning-octagon text-4xl text-red-600"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mt-4">Delete File</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-base text-gray-600">
+                        Are you sure you want to delete <strong id="fileNameToDelete" class="font-bold"></strong>? This action cannot be undone.
+                    </p>
+                </div>
+                <div class="flex justify-center items-center px-4 py-3 space-x-4">
+                    <button id="cancelButton" class="w-full px-4 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 focus:outline-none">
+                        Cancel
+                    </button>
+                    <a id="confirmDeleteButton" href="#" class="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 focus:outline-none">
+                        Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="copyNotification" class="fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50">
+        Link copied to clipboard!
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Element References ---
+        const fileInput = document.getElementById('file');
+        const uploadForm = document.getElementById('uploadForm');
+        const sendFilesBtn = document.getElementById('sendFilesBtn');
+        const uploadButton = document.getElementById('uploadButton');
+        const passwordInput = document.getElementById('password');
+        const filePreview = document.getElementById('filePreview');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+        const buttonText = document.getElementById('buttonText');
+        const spinner = document.getElementById('spinner');
+
+        // --- Event Listeners ---
+        sendFilesBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        removeFileBtn.addEventListener('click', resetForm);
+        uploadForm.addEventListener('submit', handleFormSubmit);
+
+        // --- Functions ---
+        function handleFileSelect() {
+            if (fileInput.files.length) {
+                updateFilePreview(fileInput.files[0]);
+            }
+        }
+
+        function resetForm() {
+            fileInput.value = '';
+            passwordInput.value = '';
+            filePreview.classList.add('hidden');
+            sendFilesBtn.classList.remove('hidden');
+            sendFilesBtn.classList.add('inline-flex');
+            uploadButton.classList.add('hidden');
+        }
+
+        function updateFilePreview(file) {
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatBytes(file.size);
+            document.getElementById('fileIcon').className = getFileIconClass(file.type) + ' text-2xl text-gray-500';
+            filePreview.classList.remove('hidden');
+            sendFilesBtn.classList.add('hidden');
+            uploadButton.classList.remove('hidden');
+            uploadButton.classList.add('inline-flex');
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const password = passwordInput.value;
+            if (!password) {
+                alert('Please set a password to encrypt the file.');
+                return;
+            }
+
+            uploadButton.disabled = true;
+            buttonText.textContent = 'Encrypting...';
+            spinner.classList.remove('hidden');
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                // Encrypt the file data
+                const fileData = e.target.result;
+                const encrypted = CryptoJS.AES.encrypt(fileData, password).toString();
+
+                // Create a new Blob with the encrypted data
+                const encryptedBlob = new Blob([encrypted], { type: 'application/octet-stream' });
+                
+                // Use FormData to send the encrypted file
+                const formData = new FormData();
+                // Add .enc to the filename to indicate it's encrypted
+                formData.append('file', encryptedBlob, file.name + '.enc');
+
+                buttonText.textContent = 'Uploading...';
+
+                // Submit the form data
+                try {
+                    const response = await fetch('/', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    // Redirect to the same page to see the flash message and updated file list
+                    window.location.href = '/';
+                } catch (error) {
+                    alert('Upload failed: ' + error);
+                    resetUI();
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('Error reading file.');
+                resetUI();
+            };
+
+            reader.readAsDataURL(file); // Read as Base64 DataURL
+        }
+        
+        function resetUI() {
+            uploadButton.disabled = false;
+            buttonText.textContent = 'Encrypt & Upload';
+            spinner.classList.add('hidden');
+        }
+
+        // --- Utility & Modal Functions (same as before) ---
+        function formatBytes(bytes, d=2) { if(bytes===0)return'0 Bytes';const k=1024,dm=d<0?0:d,s=['Bytes','KB','MB','GB','TB'];const i=Math.floor(Math.log(bytes)/Math.log(k));return parseFloat((bytes/Math.pow(k,i)).toFixed(dm))+' '+s[i]; }
+        function getFileIconClass(t) { if(t.startsWith('image/'))return'ph-bold ph-file-image';if(t==='application/pdf')return'ph-bold ph-file-pdf';if(t.startsWith('video/'))return'ph-bold ph-file-video';if(t.startsWith('audio/'))return'ph-bold ph-file-audio';if(t.includes('zip')||t.includes('rar'))return'ph-bold ph-file-archive';return'ph-bold ph-file'; }
+        
+        const deleteModal=document.getElementById('deleteModal'),cancelButton=document.getElementById('cancelButton'),confirmDeleteButton=document.getElementById('confirmDeleteButton'),fileNameToDelete=document.getElementById('fileNameToDelete');document.querySelectorAll('.delete-btn').forEach(b=>{b.addEventListener('click',function(){const f=this.dataset.filename;fileNameToDelete.textContent=f;confirmDeleteButton.href=`/delete/${f}`;deleteModal.classList.remove('hidden')})});cancelButton.addEventListener('click',()=>deleteModal.classList.add('hidden'));window.addEventListener('click',e=>{if(e.target===deleteModal)deleteModal.classList.add('hidden')});
+        const copyNotification=document.getElementById('copyNotification');document.querySelectorAll('.copy-link-btn').forEach(b=>{b.addEventListener('click',function(){const l=this.dataset.link,t=document.createElement('textarea');t.value=l;document.body.appendChild(t);t.select();try{document.execCommand('copy');copyNotification.classList.remove('opacity-0');setTimeout(()=>copyNotification.classList.add('opacity-0'),2000)}catch(e){console.error('Oops, unable to copy',e)}document.body.removeChild(t)})});
+    });
+    </script>
+</body>
+</html>
